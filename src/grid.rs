@@ -118,6 +118,11 @@ impl Grid {
         // Remove vehicles that have reached their destination
         self.vehicles.retain(|vehicle| vehicle.current_position != vehicle.destination);
     }
+
+    pub fn update_traffic_lights(&mut self, time_passed: f32) {
+        // Update all traffic lights with the elapsed time
+        TrafficLight::update_traffic_lights(&mut self.traffic_lights, time_passed);
+    }
 }
 
 impl Display for Grid {
