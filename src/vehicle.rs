@@ -1,7 +1,10 @@
-use std::fmt::{Display, Formatter, Result};
+// vehicle.rs
 use crate::{GRID_HEIGHT, GRID_WIDTH, CAR_ID_COUNTER};
 use std::sync::atomic::Ordering;
 use rand::Rng;
+use std::vec;
+
+use tokio::time::{sleep, Duration};
 
 #[derive(Clone, Debug)]
 pub enum VehicleType {
@@ -99,10 +102,11 @@ impl Vehicle {
             // When car just generated current speed is same as max speed.
             speed, 
             (x_final,y_final), 
-            priority)
+            priority,
+        )
     }
 
-    pub fn update(&mut self) {
+    pub async fn update(&mut self) {
         // Car at destination
         if self.current_position == self.destination {
             return 
@@ -170,6 +174,90 @@ impl Vehicle {
                 self.current_position.1 = self.destination.1;
             }
         }
+        // // Car at destination
+        // if self.current_position == self.destination {
+        //     return 
+        // }
+
+        // // Car needs to move on y only
+        // if self.current_position.0 == self.destination.0 {
+        //     let distance = self.destination.1 - self.current_position.1;
+        //     if distance > 0 {
+        //         // Move forward on y
+        //         if self.current_speed <= distance.abs() {
+        //             self.current_position.1 += self.current_speed;
+        //         } else {
+        //             self.current_position.1 = self.destination.1;
+        //         }
+        //     } else {
+        //         // Move backward on y
+        //         if self.current_speed <= distance.abs() {
+        //             self.current_position.1 -= self.current_speed;
+        //         } else {
+        //             self.current_position.1 = self.destination.1;
+        //         }
+        //     }
+        // } 
+
+        // // Car needs to move on x only
+        // else if self.current_position.1 == self.destination.1 {
+        //     let distance = self.destination.0 - self.current_position.0;
+        //     if distance > 0 {
+        //         // Move forward on x
+        //         if self.current_speed <= distance.abs() {
+        //             self.current_position.0 += self.current_speed;
+        //         } else {
+        //             self.current_position.0 = self.destination.0;
+        //         }
+        //     } else {
+        //         // Move backward on x
+        //         if self.current_speed <= distance.abs() {
+        //             self.current_position.0 -= self.current_speed;
+        //         } else {
+        //             self.current_position.0 = self.destination.0;
+        //         }
+        //     }
+        // } 
+        // // Car needs to move on x and y
+        // else {
+        //     // First move on x axis if not on a street (multiple of 10)
+        //     if self.current_position.1 != 0 && self.current_position.1 % 10 != 0 {
+        //         // We need to reach the nearest street first
+        //         let target_y = self.current_position.1;
+        //         let distance = target_y - self.current_position.1;
+                
+        //         if distance.abs() <= self.current_speed {
+        //             self.current_position.1 = target_y as i32;
+        //         } else if distance > 0 {
+        //             self.current_position.1 += self.current_speed;
+        //         } else {
+        //             self.current_position.1 -= self.current_speed;
+        //         }
+        //     }
+        //     // Then move on x if on a street
+        //     else if self.current_position.0 != self.destination.0 {
+        //         let distance = self.destination.0 - self.current_position.0;
+                
+        //         if distance.abs() <= self.current_speed {
+        //             self.current_position.0 = self.destination.0;
+        //         } else if distance > 0 {
+        //             self.current_position.0 += self.current_speed;
+        //         } else {
+        //             self.current_position.0 -= self.current_speed;
+        //         }
+        //     }
+        //     // Finally move on y to reach destination
+        //     else {
+        //         let distance = self.destination.1 - self.current_position.1;
+                
+        //         if distance.abs() <= self.current_speed {
+        //             self.current_position.1 = self.destination.1;
+        //         } else if distance > 0 {
+        //             self.current_position.1 += self.current_speed;
+        //         } else {
+        //             self.current_position.1 -= self.current_speed;
+        //         }
+        //     }
     }
 
 }

@@ -1,7 +1,13 @@
+// grid.rs
 use crate::point::Point;
 use crate::vehicle::{Vehicle, VehicleType};
 use std::fmt::{Display, Formatter, Result};
 use crate::{GRID_HEIGHT, GRID_WIDTH};
+// use crate::routing;
+
+use tokio::sync::{Mutex, mpsc};
+use std::sync::Arc;
+use tokio::task::JoinSet;
 
 pub struct Grid {
     pub points: Vec<Point>,
@@ -17,7 +23,6 @@ impl Grid {
     }
 
     pub fn generate_grid(mut self, height: i32, width: i32) -> Grid {
-
         // Generate points for a grid (height x width cells)
         for i in 0..= height - 1 {
             for j in 0..= width - 1 {
@@ -41,10 +46,47 @@ impl Grid {
         return self; 
     }
 
-    pub fn update_vehicles(&mut self) {
-        for vehicle in self.vehicles.iter_mut() {
-            vehicle.update();
+    pub async fn update_vehicles(&mut self) {
+        // Create a collection of asynchronous tasks 
+        let mut join_set = JoinSet::new();
+
+        // Create a vector to store updated vehicles
+        let mut updated_vehicles = Vec::with_capacity(self.vehicles.len());
+        for vehicle in &self.vehicles {
+            updated_vehicles.push(vehicle.clone());
         }
+
+        // Spawn each vehicle's update task
+        for i in 0..updated_vehicles.len() {
+            // Move ownership of the vehicle to the task
+            let mut vehicle = updated_vehicles[i].clone();
+            
+            join_set.spawn(async move {
+                vehicle.update().await;
+                // Return the updated vehicle
+                vehicle 
+            });
+        }
+
+        // Collect updated vehicles
+        let mut i = 0;
+        // Await the completion of all tasks
+        while let Some(result) = join_set.join_next().await {
+            match result {
+                Ok(updated_vehicle) => {
+                    if i < self.vehicles.len() {
+                        self.vehicles[i] = updated_vehicle;
+                        i += 1;
+                    }
+                },
+                Err(e) => {
+                    eprintln!("Vehicle update task failed: {}", e);
+                }
+            }
+        }
+
+        // Remove vehicles that have reached their destination
+        self.vehicles.retain(|vehicle| vehicle.current_position != vehicle.destination);
     }
 }
 
