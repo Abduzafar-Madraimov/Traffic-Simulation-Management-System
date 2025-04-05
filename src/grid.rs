@@ -145,10 +145,34 @@ impl Display for Grid {
 
             // Print points with horizontal connections
             for (i, point) in sorted_points.iter().enumerate() {
-                // Get the string representation of the point
-                let point_string = format!("{}", point); 
-                // Write the point
-                write!(f, "{}", point_string)?;
+                // Check if there's a traffic light at this point
+                let traffic_light = self.traffic_lights.iter()
+                .find(|light| light.position.0 == point.x && light.position.1 == point.y);
+                
+                if let Some(light) = traffic_light {
+                    // Display the point with traffic light information
+                    let light_symbol = match light.light_state {
+                        LightState::Green => "\x1B[32mG\x1B[0m",  // Green text
+                        LightState::Yellow => "\x1B[33mY\x1B[0m", // Yellow text
+                        LightState::Red => "\x1B[31mR\x1B[0m",    // Red text
+                    };
+                    
+                    // Format coordinates the same way as in Point::fmt
+                    let coords = if point.x > 9 && point.y > 9 {
+                        format!("({},{})", point.x, point.y)
+                    } else if point.x > 9 && point.y < 10 {
+                        format!("({},0{})", point.x, point.y)
+                    } else if point.y > 9 && point.x < 10 {
+                        format!("(0{},{})", point.x, point.y)
+                    } else {
+                        format!("(0{},0{})", point.x, point.y)
+                    };
+                    
+                    write!(f, "{}{}", light_symbol, coords)?;
+                } else {
+                    // Use the default Point display
+                    write!(f, "{}", point)?;
+                }
                 
                 // Write the Horizontal connections
                 if i < sorted_points.len() - 1 {
