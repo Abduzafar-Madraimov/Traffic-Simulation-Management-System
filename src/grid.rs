@@ -1,9 +1,9 @@
 // grid.rs
 use crate::point::Point;
 use crate::vehicle::{Vehicle, VehicleType};
+use crate::light::{LightState, TrafficLight};
 use std::fmt::{Display, Formatter, Result};
 use crate::{GRID_HEIGHT, GRID_WIDTH};
-// use crate::routing;
 
 use tokio::sync::{Mutex, mpsc};
 use std::sync::Arc;
@@ -12,6 +12,7 @@ use tokio::task::JoinSet;
 pub struct Grid {
     pub points: Vec<Point>,
     pub vehicles: Vec<Vehicle>,
+    pub traffic_lights: Vec<TrafficLight>,
 }
 
 impl Grid {
@@ -19,6 +20,7 @@ impl Grid {
         Self {
             points: Vec::new(),
             vehicles: Vec::new(),
+            traffic_lights: Vec::new(),
         }  
     }
 
@@ -26,7 +28,7 @@ impl Grid {
         // Generate points for a grid (height x width cells)
         for i in 0..= height - 1 {
             for j in 0..= width - 1 {
-                self.points.push(Point {
+                let point = Point {
                     // x should be a column value 
                     x: j * 10,
                     // y should be a row value
@@ -34,7 +36,35 @@ impl Grid {
                     // Intersection appears if either x or y middle values
                     // (Not upper bound or lower bound values)
                     is_intersection: (j > 0 && j < width - 1) || ((i > 0 && i < height - 1)),
-                });
+                };
+                
+                // Generate trafic light for this point
+                match TrafficLight::generate_traffic_light(&point) {
+                    Ok(traffic_light) => {
+                        // // For testing
+                        // match traffic_light.light_state {
+                        //     LightState::Green => {
+                        //         println!("Traffic light at x{}, y{}, state is green",traffic_light.position.0, traffic_light.position.1);
+                        //     },
+                        //     LightState::Yellow => {
+                        //         println!("Traffic light at x{}, y{}, state is yellow",traffic_light.position.0, traffic_light.position.1);
+                        //     },
+                        //     LightState::Red => {
+                        //         println!("Traffic light at x{}, y{}, state is red",traffic_light.position.0, traffic_light.position.1);
+                        //     },
+                        // }
+                        // Add successful traffic light
+                        self.traffic_lights.push(traffic_light);
+                    },
+                    Err(_) => {
+                        // // For testing
+                        // // Point is not an intersection
+                        // println!("Not creating traffic light at ({}, {})", point.x, point.y);
+                    }
+                }
+
+                // Add the point to grid
+                self.points.push(point);
             }
         }
     

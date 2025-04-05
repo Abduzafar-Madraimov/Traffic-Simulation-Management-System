@@ -2,7 +2,7 @@
 mod grid;
 mod point;
 mod vehicle;
-// mod routing;
+mod light;
 
 use grid::Grid;
 use std::sync::atomic::AtomicU64;
@@ -18,7 +18,7 @@ static CAR_ID_COUNTER: AtomicU64 = AtomicU64::new(0);
 async fn main() {
     // Interval for more consistent scheduling
     // It calculates next tick based on the initial start time
-    let mut interval = tokio::time::interval(std::time::Duration::from_millis(1000));
+    let mut interval = tokio::time::interval(std::time::Duration::from_millis(120));
 
     // Generate height by width grid of cells
     let mut grid = Grid::generate_grid(Grid::new(), GRID_HEIGHT, GRID_WIDTH);
