@@ -1,21 +1,8 @@
-// main.rs
-mod grid;
-mod point;
-mod vehicle;
-mod light;
-mod message;
-mod analyzer;
-
-use grid::Grid;
-use std::sync::atomic::AtomicU64;
 use tokio::sync::mpsc;
 use std::time::Instant;
-use message::SimulationMessage;
+use helpers::{analyzer::run_analyzer, message::SimulationMessage,variables::{GRID_HEIGHT, GRID_WIDTH}, grid::Grid, vehicle::Vehicle};
 
-// Global constants and variables
-static GRID_HEIGHT: i32 = 3;
-static GRID_WIDTH: i32 = 3;
-static CAR_ID_COUNTER: AtomicU64 = AtomicU64::new(0);
+mod helpers;
 
 #[tokio::main]
 async fn main() {
@@ -24,12 +11,12 @@ async fn main() {
 
     // Spawn the dummy analyzer task
     tokio::spawn(async move {
-        analyzer::run_analyzer(rx).await;
+        run_analyzer(rx).await;
     });
 
     // Interval for more consistent scheduling
     // It calculates next tick based on the initial start time
-    let mut interval = tokio::time::interval(std::time::Duration::from_millis(120));
+    let mut interval = tokio::time::interval(std::time::Duration::from_millis(300));
 
     // Track time passed
     let mut last_update = Instant::now();
@@ -56,7 +43,7 @@ async fn main() {
         let mut handles = vec![];
         for _ in 0..GRID_WIDTH {
             let handle = tokio::spawn(
-                vehicle::Vehicle::generate_vehicle()
+                Vehicle::generate_vehicle()
             );
             handles.push(handle);
         }

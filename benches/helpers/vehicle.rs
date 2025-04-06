@@ -1,7 +1,10 @@
 // vehicle.rs
-use crate::{GRID_HEIGHT, GRID_WIDTH, CAR_ID_COUNTER};
 use std::sync::atomic::Ordering;
 use rand::Rng;
+
+// use crate::variables::{CAR_ID_COUNTER, GRID_HEIGHT, GRID_WIDTH};
+
+use super::variables::{GRID_HEIGHT, GRID_WIDTH, CAR_ID_COUNTER};
 
 #[derive(Clone, Debug)]
 pub enum VehicleType {

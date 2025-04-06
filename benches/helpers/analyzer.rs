@@ -1,6 +1,7 @@
 use tokio::sync::mpsc;
 use tokio::time::{sleep, Duration};
-use crate::message::SimulationMessage;
+use super::message::SimulationMessage;
+
 
 pub async fn run_analyzer(mut rx: mpsc::Receiver<SimulationMessage>) {
     while let Some(message) = rx.recv().await {

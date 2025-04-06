@@ -1,5 +1,5 @@
 //light.rs
-use crate::point::Point;
+use super::point::Point;
 use rand::Rng;
 use tokio::task::JoinSet;
 

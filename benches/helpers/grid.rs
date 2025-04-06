@@ -1,7 +1,7 @@
 // grid.rs
-use crate::point::Point;
-use crate::vehicle::{Vehicle, VehicleType};
-use crate::light::{LightState, TrafficLight};
+use super::point::Point;
+use super::vehicle::{Vehicle, VehicleType};
+use super::light::{LightState, TrafficLight};
 use std::fmt::{Display, Formatter, Result};
 use tokio::task::JoinSet;
 
