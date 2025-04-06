@@ -1,13 +1,16 @@
 //light.rs
 use crate::point::Point;
 use rand::Rng;
+use tokio::task::JoinSet;
 
+#[derive(Clone)]
 pub enum LightState {
     Green,
     Yellow,
     Red,
 }
 
+#[derive(Clone)]
 pub struct TrafficLight {
     pub light_state: LightState,
     pub position: (i32, i32),
@@ -71,7 +74,7 @@ impl TrafficLight {
     }
 
     // Update a single traffic light given elapsed time
-    pub fn update(&mut self, time_passed: f32) {
+    pub async fn update(&mut self, time_passed: f32) {
         // Add the elapsed time to our time in current state
         self.time_in_state += time_passed;
         
@@ -84,31 +87,34 @@ impl TrafficLight {
         }
     }
 
-    fn print_state(&self) {
-        match self.light_state {
-            LightState::Green => print!("Green"),
-            LightState::Yellow => print!("Yellow"),
-            LightState::Red => print!("Red"),
-        }
-    }
-
     // Update all traffic lights in the grid's vector
-    pub fn update_traffic_lights(traffic_lights: &mut Vec<TrafficLight>, time_passed: f32) {
-        for traffic_light in traffic_lights.iter_mut() {
-            // // Testing:
-            // println!("Before");
-            // print!("Traffic light at ({},{}), state is: ", traffic_light.position.0, traffic_light.position.1);
-            // traffic_light.print_state();
-            // print!(", and time in state: {}", traffic_light.time_in_state);
-            // println!();
-            // traffic_light.update(time_passed);
-            // println!("After");
-            // print!("Traffic light at ({},{}), state is: ", traffic_light.position.0, traffic_light.position.1);
-            // traffic_light.print_state();
-            // print!(", and time in state: {}", traffic_light.time_in_state);
-            // println!();
+    pub async fn update_traffic_lights(traffic_lights: &mut Vec<TrafficLight>, time_passed: f32) {
+        // Create a collection of asynchronous tasks 
+        let mut join_set = JoinSet::new();
 
-            traffic_light.update(time_passed);
+        for (i, light) in traffic_lights.iter().enumerate() {
+            // Clone the light so that the spawned task owns its data
+            let light_clone = light.clone();
+            // Create a future that updates the light
+            join_set.spawn(async move {
+                let mut updated = light_clone;
+                updated.update(time_passed).await;
+                (i, updated)
+            });
         }
+
+        // Collect updated traffic lights and update the vector
+        while let Some(result) = join_set.join_next().await {
+            match result {
+                Ok((i, updated_light)) => {
+                    // Replace the original light with the updated one
+                    traffic_lights[i] = updated_light;
+                },
+                Err(e) => {
+                    eprintln!("Traffic light update task failed: {}", e);
+                }
+            }
+        }
+    
     }
 }

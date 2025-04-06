@@ -48,62 +48,64 @@ impl Vehicle {
         };
     }
 
-    pub fn generate_vehicle() -> Vehicle {
-        // randomly generate the car type
-        let mut rng = rand::rng();
-        // The range 1..=3 generates numbers from 1 to 3 (inclusive)
-        let num = rng.random_range(1..=3);
+    pub async fn generate_vehicle() -> Self {
+        tokio::task::spawn_blocking(move || {
+            // randomly generate the car type
+            let mut rng = rand::rng();
+            // The range 1..=3 generates numbers from 1 to 3 (inclusive)
+            let num = rng.random_range(1..=3);
 
-        // Match the random number to a vehicle type
-        let vehicle_type = match num {
-            1 => VehicleType::Car,
-            2 => VehicleType::Bus,
-            3 => VehicleType::Emergency,
-            // since num is always between 1 and 3
-            _ => unreachable!(), 
-        };
+            // Match the random number to a vehicle type
+            let vehicle_type = match num {
+                1 => VehicleType::Car,
+                2 => VehicleType::Bus,
+                3 => VehicleType::Emergency,
+                // since num is always between 1 and 3
+                _ => unreachable!(), 
+            };
 
-        // Generate poisition
-        let x_position = rng.random_range(0..=(GRID_WIDTH * 10));
-        let y_position =
-        // If x is not 0 and not divisible by 10, then generate y as a multiple of 10.
-        if x_position != 0 || x_position % 10 != 0 {
-            rng.random_range(0..=GRID_HEIGHT) * 10 
-        } else {
-            rng.random_range(0..=GRID_HEIGHT * 10)
-        };
+            // Generate poisition
+            let x_position = rng.random_range(0..=(GRID_WIDTH * 10));
+            let y_position =
+            // If x is not 0 and not divisible by 10, then generate y as a multiple of 10.
+            if x_position != 0 || x_position % 10 != 0 {
+                rng.random_range(0..=GRID_HEIGHT) * 10 
+            } else {
+                rng.random_range(0..=GRID_HEIGHT * 10)
+            };
 
-        // Generate speed based on the car type
-        let speed = match num {
-            1 => 2,
-            2 => 1,
-            3 => 3,
-            _ => unreachable!(),
-        };
+            // Generate speed based on the car type
+            let speed = match num {
+                1 => 2,
+                2 => 1,
+                3 => 3,
+                _ => unreachable!(),
+            };
 
-        // Generate prioirty based on the car type (higher is better)
-        let priority = match num {
-            1 => 1,
-            2 => 2,
-            3 => 3,
-            _ => unreachable!(),
-        };
+            // Generate prioirty based on the car type (higher is better)
+            let priority = match num {
+                1 => 1,
+                2 => 2,
+                3 => 3,
+                _ => unreachable!(),
+            };
 
-        // Generate destination (both should be divisible by 10 or 0)
-        let x_final = rng.random_range(0..=GRID_WIDTH) * 10;
-        let y_final = rng.random_range(0..=GRID_HEIGHT) * 10;
+            // Generate destination (both should be divisible by 10 or 0)
+            let x_final = rng.random_range(0..=GRID_WIDTH) * 10;
+            let y_final = rng.random_range(0..=GRID_HEIGHT) * 10;
 
-        // Create a vehicle
-        Vehicle::new(
-            CAR_ID_COUNTER.fetch_add(1, Ordering::Relaxed), 
-            vehicle_type, 
-            (x_position, y_position), 
-            speed, 
-            // When car just generated current speed is same as max speed.
-            speed, 
-            (x_final,y_final), 
-            priority,
-        )
+            // Create a vehicle
+            Vehicle::new(
+                CAR_ID_COUNTER.fetch_add(1, Ordering::Relaxed), 
+                vehicle_type, 
+                (x_position, y_position), 
+                speed, 
+                // When car just generated current speed is same as max speed.
+                speed, 
+                (x_final,y_final), 
+                priority,
+            )
+        }).await.expect("Vehicle generation task failed")
     }
 
     pub async fn update(&mut self) {
@@ -174,90 +176,6 @@ impl Vehicle {
                 self.current_position.1 = self.destination.1;
             }
         }
-        // // Car at destination
-        // if self.current_position == self.destination {
-        //     return 
-        // }
-
-        // // Car needs to move on y only
-        // if self.current_position.0 == self.destination.0 {
-        //     let distance = self.destination.1 - self.current_position.1;
-        //     if distance > 0 {
-        //         // Move forward on y
-        //         if self.current_speed <= distance.abs() {
-        //             self.current_position.1 += self.current_speed;
-        //         } else {
-        //             self.current_position.1 = self.destination.1;
-        //         }
-        //     } else {
-        //         // Move backward on y
-        //         if self.current_speed <= distance.abs() {
-        //             self.current_position.1 -= self.current_speed;
-        //         } else {
-        //             self.current_position.1 = self.destination.1;
-        //         }
-        //     }
-        // } 
-
-        // // Car needs to move on x only
-        // else if self.current_position.1 == self.destination.1 {
-        //     let distance = self.destination.0 - self.current_position.0;
-        //     if distance > 0 {
-        //         // Move forward on x
-        //         if self.current_speed <= distance.abs() {
-        //             self.current_position.0 += self.current_speed;
-        //         } else {
-        //             self.current_position.0 = self.destination.0;
-        //         }
-        //     } else {
-        //         // Move backward on x
-        //         if self.current_speed <= distance.abs() {
-        //             self.current_position.0 -= self.current_speed;
-        //         } else {
-        //             self.current_position.0 = self.destination.0;
-        //         }
-        //     }
-        // } 
-        // // Car needs to move on x and y
-        // else {
-        //     // First move on x axis if not on a street (multiple of 10)
-        //     if self.current_position.1 != 0 && self.current_position.1 % 10 != 0 {
-        //         // We need to reach the nearest street first
-        //         let target_y = self.current_position.1;
-        //         let distance = target_y - self.current_position.1;
-                
-        //         if distance.abs() <= self.current_speed {
-        //             self.current_position.1 = target_y as i32;
-        //         } else if distance > 0 {
-        //             self.current_position.1 += self.current_speed;
-        //         } else {
-        //             self.current_position.1 -= self.current_speed;
-        //         }
-        //     }
-        //     // Then move on x if on a street
-        //     else if self.current_position.0 != self.destination.0 {
-        //         let distance = self.destination.0 - self.current_position.0;
-                
-        //         if distance.abs() <= self.current_speed {
-        //             self.current_position.0 = self.destination.0;
-        //         } else if distance > 0 {
-        //             self.current_position.0 += self.current_speed;
-        //         } else {
-        //             self.current_position.0 -= self.current_speed;
-        //         }
-        //     }
-        //     // Finally move on y to reach destination
-        //     else {
-        //         let distance = self.destination.1 - self.current_position.1;
-                
-        //         if distance.abs() <= self.current_speed {
-        //             self.current_position.1 = self.destination.1;
-        //         } else if distance > 0 {
-        //             self.current_position.1 += self.current_speed;
-        //         } else {
-        //             self.current_position.1 -= self.current_speed;
-        //         }
-        //     }
     }
 
 }

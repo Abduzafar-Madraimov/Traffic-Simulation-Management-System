@@ -5,6 +5,8 @@ mod vehicle;
 mod light;
 
 use grid::Grid;
+use serde::de::value;
+use vehicle::Vehicle;
 use std::sync::atomic::AtomicU64;
 use tokio::sync::mpsc;
 use std::time::{Instant, Duration};
@@ -36,11 +38,24 @@ async fn main() {
         print!("\x1B[2J\x1B[1;1H");
 
         // Update Traffic Lights
-        grid.update_traffic_lights(time_passed);
+        grid.update_traffic_lights(time_passed).await;
 
-        // Generate more vehicles
+        // Generate more vehicles asynchronously
+        let mut handles = vec![];
         for _ in 0..GRID_WIDTH {
-            grid.vehicles.push(vehicle::Vehicle::generate_vehicle());
+            let handle = tokio::spawn(
+                vehicle::Vehicle::generate_vehicle()
+            );
+            handles.push(handle);
+        }
+        // Collect generated vehicles
+        for handle in handles {
+            match handle.await {
+                Ok(vehicle) => grid.vehicles.push(vehicle),
+                Err(e) => {
+                    eprintln!("Error generating vehicle: {}", e);
+                }
+            }
         }
 
         // Update vehicle positions 

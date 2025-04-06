@@ -41,36 +41,15 @@ impl Grid {
                 // Generate trafic light for this point
                 match TrafficLight::generate_traffic_light(&point) {
                     Ok(traffic_light) => {
-                        // // For testing
-                        // match traffic_light.light_state {
-                        //     LightState::Green => {
-                        //         println!("Traffic light at x{}, y{}, state is green",traffic_light.position.0, traffic_light.position.1);
-                        //     },
-                        //     LightState::Yellow => {
-                        //         println!("Traffic light at x{}, y{}, state is yellow",traffic_light.position.0, traffic_light.position.1);
-                        //     },
-                        //     LightState::Red => {
-                        //         println!("Traffic light at x{}, y{}, state is red",traffic_light.position.0, traffic_light.position.1);
-                        //     },
-                        // }
-                        // Add successful traffic light
                         self.traffic_lights.push(traffic_light);
                     },
                     Err(_) => {
-                        // // For testing
-                        // // Point is not an intersection
-                        // println!("Not creating traffic light at ({}, {})", point.x, point.y);
                     }
                 }
 
                 // Add the point to grid
                 self.points.push(point);
             }
-        }
-    
-        // Populate starting grid with vehicles 
-        for _i in 0..GRID_WIDTH {
-            self.vehicles.push(Vehicle::generate_vehicle());
         }
     
         return self; 
@@ -119,9 +98,9 @@ impl Grid {
         self.vehicles.retain(|vehicle| vehicle.current_position != vehicle.destination);
     }
 
-    pub fn update_traffic_lights(&mut self, time_passed: f32) {
+    pub async fn update_traffic_lights(&mut self, time_passed: f32) {
         // Update all traffic lights with the elapsed time
-        TrafficLight::update_traffic_lights(&mut self.traffic_lights, time_passed);
+        TrafficLight::update_traffic_lights(&mut self.traffic_lights, time_passed).await;
     }
 }
 
