@@ -1,6 +1,14 @@
 [package]
-name = "testingGit"
+name = "c2_tp070007"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+rand = "0.8"
+rand_chacha = "0.9.0"
+criterion = "0.5.1"
+tokio = { version = "1", features = ["full"] }
+
+[[bench]]
+name = "benchmark"
+harness = false
