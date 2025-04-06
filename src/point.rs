@@ -1,3 +1,4 @@
+//point.rs
 use std::fmt::{Display, Formatter, Result};
 
 pub struct Point {

@@ -2,9 +2,6 @@
 use crate::{GRID_HEIGHT, GRID_WIDTH, CAR_ID_COUNTER};
 use std::sync::atomic::Ordering;
 use rand::Rng;
-use std::vec;
-
-use tokio::time::{sleep, Duration};
 
 #[derive(Clone, Debug)]
 pub enum VehicleType {

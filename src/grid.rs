@@ -3,10 +3,6 @@ use crate::point::Point;
 use crate::vehicle::{Vehicle, VehicleType};
 use crate::light::{LightState, TrafficLight};
 use std::fmt::{Display, Formatter, Result};
-use crate::{GRID_HEIGHT, GRID_WIDTH};
-
-use tokio::sync::{Mutex, mpsc};
-use std::sync::Arc;
 use tokio::task::JoinSet;
 
 pub struct Grid {
